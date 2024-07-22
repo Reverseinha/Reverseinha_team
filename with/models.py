@@ -1,9 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
-from django.utils import timezone
-from django.dispatch import receiver
-from django.db.models.signals import post_migrate
-
 
 class MyUserManager(BaseUserManager):
     def create_user(self, id, email, password=None, **extra_fields):
@@ -59,7 +55,23 @@ class MyUser(AbstractUser):
 
     def __str__(self):
         return self.id
-    
+
+class SurveyQuestion(models.Model):
+    question_text = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.question_text
+
+class SurveyResponse(models.Model):
+    user = models.ForeignKey(MyUser, on_delete=models.CASCADE)
+    question = models.ForeignKey(SurveyQuestion, on_delete=models.CASCADE)
+    answer = models.BooleanField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.id} - {self.question.id}"
+
 class Post(models.Model):
     title = models.CharField(max_length=100)
     content = models.TextField()
@@ -68,59 +80,3 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
-
-# class Site(models.Model):
-#     SITE_CHOICES = [
-#         ('intern', '해외취업'),
-#         ('language-study', '어학연수'),
-#         ('working-holiday', '워킹홀리데이'),
-#     ]
-#     site_name = models.CharField(max_length=15, choices=SITE_CHOICES, unique=True)
-    
-#     def __str__(self):
-#         return self.get_site_name_display()
-
-
-# class Category(models.Model):
-#     CATEGORY_CHOICES = [
-#         ('community', '커뮤니티'),
-#         ('group-buying', '공구'),
-#         ('agency-document', '대행, 서류작성'),
-#         ('info', '정보'),
-#     ]
-#     category_name = models.CharField(max_length=15, choices=CATEGORY_CHOICES, unique=True)
-
-#     def __str__(self):
-#         return self.get_category_name_display()
-
-# class SiteCategory(models.Model):
-#     site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True)
-#     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
-
-# class Post(models.Model):
-#     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True)
-#     continent = models.ForeignKey(Continent, on_delete=models.SET_NULL, null=True)
-#     author = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True)
-#     site_category = models.ForeignKey(SiteCategory, on_delete=models.SET_NULL, null=True)
-#     site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True)
-#     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
-#     title = models.CharField(max_length=255)
-#     content = models.TextField()
-#     images = models.ImageField(upload_to='images/', blank=True, null=True)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-#     likes = models.IntegerField(default=0)
-
-#     def __str__(self):
-#         return self.title
-
-
-# class Comments(models.Model):
-#     post = models.ForeignKey(Post, on_delete=models.CASCADE,related_name='comments')
-#     author = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True)
-#     content = models.CharField(max_length=100)
-#     create_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-
-#     def __str__(self):
-#         return self.content
