@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import SurveyQuestion, SurveyResponse, MyUser 
+from .models import SurveyQuestion, SurveyResponse, MyUser, Post, Comment
 
 class SurveyQuestionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -36,3 +36,18 @@ class LoginSerializer(serializers.Serializer):
     id = serializers.CharField(label="ID")
     password = serializers.CharField(write_only=True, label="비밀번호")
 
+class PostSerializer(serializers.ModelSerializer):
+    total_likes = serializers.ReadOnlyField()
+    total_comments = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Post
+        fields = ['id', 'title', 'content', 'created_at', 'image', 'total_likes', 'total_comments']
+
+class CommentSerializer(serializers.ModelSerializer):
+    author_username = serializers.CharField(source='author.username', read_only=True)
+    
+    class Meta:
+        model = Comment
+        fields = ['id', 'post', 'author', 'author_username', 'content', 'created_at']
+        read_only_fields = ['created_at']
