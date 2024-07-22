@@ -16,7 +16,7 @@ SECRET_KEY = 'm)xg6+9es(t75ilvij$$(ww_@y!ene*=sf4yr@1qh4kza2+-n*'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 AUTH_USER_MODEL = 'with.MyUser'
 # Application definition
@@ -34,7 +34,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     'corsheaders',
 ]
-
+LOGIN_REDIRECT_URL = 'home/'  # 로그인 후 리다이렉트 될 경로
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -45,8 +45,15 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+# CORS 설정 추가
+CORS_ALLOW_ALL_ORIGINS = True  # 모든 도메인에서의 요청을 허용
 
-ROOT_URLCONF = 'Reverseinha_team.urls'
+# 또는 특정 도메인만 허용하려면 아래 설정을 사용
+CORS_ORIGIN_WHITELIST = [
+    'http://127.0.0.1:3000',
+    'http://localhost:8000',
+]
+ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
     {
@@ -85,7 +92,7 @@ SIMPLE_JWT = {
 }
 
 
-WSGI_APPLICATION = 'Reverseinha_team.wsgi.application'
+WSGI_APPLICATION = 'config.wsgi.application'
 
 
 # Database

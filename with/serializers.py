@@ -1,15 +1,15 @@
 from rest_framework import serializers
-from .models import *
+from .models import SurveyQuestion, SurveyResponse, MyUser 
 
 class SurveyQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = SurveyQuestion
-        fields = ['id', 'question_text']
+        fields = '__all__'
 
 class SurveyResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = SurveyResponse
-        fields = ['user', 'question', 'answer']
+        fields = '__all__'
 
 class SignUpSerializer(serializers.ModelSerializer):
     password_confirm = serializers.CharField(write_only=True, label="비밀번호 확인")

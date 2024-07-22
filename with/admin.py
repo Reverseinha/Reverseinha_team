@@ -15,9 +15,5 @@ class MyUserAdmin(admin.ModelAdmin):
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
-
-# admin.site.register(Post)
-# admin.site.register(Site)
-# admin.site.register(Category)
-# admin.site.register(SiteCategory)
-# admin.site.register(Comments)
+admin.site.register(SurveyQuestion)
+admin.site.register(SurveyResponse)

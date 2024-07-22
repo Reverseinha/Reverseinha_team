@@ -5,7 +5,6 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('with.urls')),  # workhol 앱의 URL들을 포함
-    path('calendar/', include('calendar_app.urls')),
+    path('with/', include('with.urls')),  
 ]# + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
