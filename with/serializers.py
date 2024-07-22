@@ -1,6 +1,16 @@
 from rest_framework import serializers
 from .models import *
 
+class SurveyQuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SurveyQuestion
+        fields = ['id', 'question_text']
+
+class SurveyResponseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SurveyResponse
+        fields = ['user', 'question', 'answer']
+
 class SignUpSerializer(serializers.ModelSerializer):
     password_confirm = serializers.CharField(write_only=True, label="비밀번호 확인")
 
@@ -26,17 +36,3 @@ class LoginSerializer(serializers.Serializer):
     id = serializers.CharField(label="ID")
     password = serializers.CharField(write_only=True, label="비밀번호")
 
-# class PostSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Post
-#         fields = '__all__'
-
-# class CommentsSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Comments
-#         fields = ['author', 'content']
-
-class UserProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MyUser
-        fields = ['email', 'username', 'birth_date', 'gender', 'phone_number', 'point']
