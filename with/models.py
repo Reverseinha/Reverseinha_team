@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import User
 
 class MyUserManager(BaseUserManager):
     def create_user(self, id, email, password=None, **extra_fields):
@@ -71,12 +72,32 @@ class SurveyResponse(models.Model):
 
     def __str__(self):
         return f"{self.user.id} - {self.question.id}"
-
+    
 class Post(models.Model):
     title = models.CharField(max_length=100)
     content = models.TextField()
-    image = models.ImageField(upload_to='images/', blank=True, null=True)
-    date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    image = models.ImageField(upload_to='ads/', null=True, blank=True)
+    likes = models.ManyToManyField(User, related_name='liked_posts', blank=True)
 
     def __str__(self):
         return self.title
+
+    @property
+    def total_likes(self):
+        # 이 게시물의 좋아요 수를 반환합니다
+        return self.likes.count()
+
+    @property
+    def total_proposals(self):
+        # 이 게시물의 댓글 수를 반환합니다
+        return self.proposals.count()
+
+class Proposal(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='proposals')
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Comment by {self.author.username} on {self.post.title}'
