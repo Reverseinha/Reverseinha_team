@@ -1,9 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
-from django.utils import timezone
-from django.dispatch import receiver
-from django.db.models.signals import post_migrate
-
+from django.conf import settings
 
 class MyUserManager(BaseUserManager):
     def create_user(self, id, email, password=None, **extra_fields):
@@ -60,58 +57,79 @@ class MyUser(AbstractUser):
     def __str__(self):
         return self.id
 
-# class Site(models.Model):
-#     SITE_CHOICES = [
-#         ('intern', '해외취업'),
-#         ('language-study', '어학연수'),
-#         ('working-holiday', '워킹홀리데이'),
-#     ]
-#     site_name = models.CharField(max_length=15, choices=SITE_CHOICES, unique=True)
-    
-#     def __str__(self):
-#         return self.get_site_name_display()
+class SurveyQuestion(models.Model):
+    question_text = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.question_text
 
-# class Category(models.Model):
-#     CATEGORY_CHOICES = [
-#         ('community', '커뮤니티'),
-#         ('group-buying', '공구'),
-#         ('agency-document', '대행, 서류작성'),
-#         ('info', '정보'),
-#     ]
-#     category_name = models.CharField(max_length=15, choices=CATEGORY_CHOICES, unique=True)
+class SurveyResponse(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    question = models.ForeignKey(SurveyQuestion, on_delete=models.CASCADE)
+    answer = models.BooleanField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
-#     def __str__(self):
-#         return self.get_category_name_display()
+    def __str__(self):
+        return f"{self.user.id} - {self.question.id}"
 
-# class SiteCategory(models.Model):
-#     site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True)
-#     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
+class Post(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    title = models.CharField(max_length=100)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    image = models.ImageField(upload_to='images/', null=True, blank=True)
+    likes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked_posts', blank=True)
 
-# class Post(models.Model):
-#     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True)
-#     continent = models.ForeignKey(Continent, on_delete=models.SET_NULL, null=True)
-#     author = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True)
-#     site_category = models.ForeignKey(SiteCategory, on_delete=models.SET_NULL, null=True)
-#     site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True)
-#     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
-#     title = models.CharField(max_length=255)
-#     content = models.TextField()
-#     images = models.ImageField(upload_to='images/', blank=True, null=True)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-#     likes = models.IntegerField(default=0)
+    def __str__(self):
+        return self.title
 
-#     def __str__(self):
-#         return self.title
+    @property
+    def total_likes(self):
+        return self.likes.count()
 
+    @property
+    def total_comments(self):
+        return self.comments.count()
 
-# class Comments(models.Model):
-#     post = models.ForeignKey(Post, on_delete=models.CASCADE,related_name='comments')
-#     author = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True)
-#     content = models.CharField(max_length=100)
-#     create_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
+class Comment(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
-#     def __str__(self):
-#         return self.content
+    def __str__(self):
+        return f'Comment by {self.author.username} on {self.post.title}'
+
+class Slide(models.Model):
+    title = models.CharField(max_length=200)
+    subtitle = models.CharField(max_length=200)
+    image = models.ImageField(upload_to='slides/')
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.title
+
+class Day(models.Model):
+    date = models.DateField(unique=True)
+
+    def __str__(self):
+        return str(self.date)
+
+class Goal(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    day = models.ForeignKey(Day, on_delete=models.CASCADE, related_name='goals')
+    text = models.CharField(max_length=200)
+    is_completed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.text
+
+class DiaryEntry(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    day = models.ForeignKey(Day, on_delete=models.CASCADE, related_name='diary_entries')
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+
+    def __str__(self):
+        return self.title
