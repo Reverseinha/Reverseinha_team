@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 from datetime import timedelta
+from django.urls import reverse_lazy
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -18,6 +19,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+#Auth 세팅
 AUTH_USER_MODEL = 'with.MyUser'
 # Application definition
 
@@ -33,6 +35,17 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt', #추가
     "drf_yasg",
     'corsheaders',
+     #allauth
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+
+    #provider
+    # 페이스북 등 추가하고싶은 것이 있다면 여기에 추가하면 됨.
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.kakao',
+
 ]
 LOGIN_REDIRECT_URL = 'home/'  # 로그인 후 리다이렉트 될 경로
 MIDDLEWARE = [
@@ -44,10 +57,20 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+     # 추가할 미들웨어
+    'allauth.account.middleware.AccountMiddleware',
 ]
 # CORS 설정 추가
 CORS_ALLOW_ALL_ORIGINS = True  # 모든 도메인에서의 요청을 허용
 
+
+SITE_ID = 1
+
+LOGIN_REDIRECT_URL = '/'  # 로그인 후 리다이렉트 될 경로
+ACCOUNT_LOGOUT_REDIRECT_URL = reverse_lazy('accountapp:login')
+ACCOUNT_LOGOUT_ON_GET = True
+
+ROOT_URLCONF = 'Reverseinha_team.urls'
 # 또는 특정 도메인만 허용하려면 아래 설정을 사용
 CORS_ORIGIN_WHITELIST = [
     'http://127.0.0.1:3000',
@@ -124,6 +147,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    # Django 관리자 페이지에서 사용자 이름으로 로그인할 수 있도록 필요
+    "django.contrib.auth.backends.ModelBackend",
+    # 이메일로 로그인과 같은 `allauth` 전용 인증 방법
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
