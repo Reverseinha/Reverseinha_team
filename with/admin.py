@@ -17,3 +17,6 @@ class MyUserAdmin(admin.ModelAdmin):
     )
 admin.site.register(SurveyQuestion)
 admin.site.register(SurveyResponse)
+admin.site.register(Slide)
+admin.site.register(Post)
+admin.site.register(Comment)

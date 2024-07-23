@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
-from django.contrib.auth.models import User
+from django.conf import settings
 
 class MyUserManager(BaseUserManager):
     def create_user(self, id, email, password=None, **extra_fields):
@@ -65,39 +65,71 @@ class SurveyQuestion(models.Model):
         return self.question_text
 
 class SurveyResponse(models.Model):
-    user = models.ForeignKey(MyUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     question = models.ForeignKey(SurveyQuestion, on_delete=models.CASCADE)
     answer = models.BooleanField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.user.id} - {self.question.id}"
-    
+
 class Post(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    image = models.ImageField(upload_to='ads/', null=True, blank=True)
-    likes = models.ManyToManyField(User, related_name='liked_posts', blank=True)
+    image = models.ImageField(upload_to='images/', null=True, blank=True)
+    likes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked_posts', blank=True)
 
     def __str__(self):
         return self.title
 
     @property
     def total_likes(self):
-        # 이 게시물의 좋아요 수를 반환합니다
         return self.likes.count()
 
     @property
-    def total_proposals(self):
-        # 이 게시물의 댓글 수를 반환합니다
-        return self.proposals.count()
+    def total_comments(self):
+        return self.comments.count()
 
-class Proposal(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='proposals')
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+class Comment(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'Comment by {self.author.username} on {self.post.title}'
+
+class Slide(models.Model):
+    title = models.CharField(max_length=200)
+    subtitle = models.CharField(max_length=200)
+    image = models.ImageField(upload_to='slides/')
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.title
+
+class Day(models.Model):
+    date = models.DateField(unique=True)
+
+    def __str__(self):
+        return str(self.date)
+
+class Goal(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    day = models.ForeignKey(Day, on_delete=models.CASCADE, related_name='goals')
+    text = models.CharField(max_length=200)
+    is_completed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.text
+
+class DiaryEntry(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    day = models.ForeignKey(Day, on_delete=models.CASCADE, related_name='diary_entries')
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+
+    def __str__(self):
+        return self.title
