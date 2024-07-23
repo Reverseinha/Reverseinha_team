@@ -21,3 +21,10 @@ urlpatterns = [
     path('user/survey_responses/', get_user_survey_responses, name='get_user_survey_responses'),  # 사용자 설문조사 데이터 조회
     path('callendar/', include(router.urls)),  # 라우터를 URL 패턴에 포함
 ]
+
+# path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+# path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+# # Swagger url
+# re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+# re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
