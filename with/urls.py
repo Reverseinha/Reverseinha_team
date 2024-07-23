@@ -23,8 +23,8 @@ schema_view = get_schema_view(
 
 
 urlpatterns = [    
-    path('with/signup/', views.signup, name='signup'),
-    path('with/login/', views.login_view, name='login'),
+    path('signup/', views.signup, name='signup'),
+    path('login/', views.login_view, name='login'),
     # path('home/', views.home, name='home'),
     # path('workhol/', views.workhol_site, name='workhol_site'),
     # path('language_study/', views.language_study_site, name='language_study_site'),

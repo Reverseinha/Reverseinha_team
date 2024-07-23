@@ -1,6 +1,8 @@
 from pathlib import Path
 import os
 from datetime import timedelta
+from django.urls import reverse_lazy
+
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -18,7 +20,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+#Auth 세팅
+
 AUTH_USER_MODEL = 'with.MyUser'
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -33,6 +39,17 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt', #추가
     "drf_yasg",
     'corsheaders',
+
+     #allauth
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+
+    #provider
+    # 페이스북 등 추가하고싶은 것이 있다면 여기에 추가하면 됨.
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.kakao',
 ]
 
 MIDDLEWARE = [
@@ -44,7 +61,15 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 추가할 미들웨어
+    'allauth.account.middleware.AccountMiddleware',
 ]
+
+SITE_ID = 1
+
+LOGIN_REDIRECT_URL = '/'  # 로그인 후 리다이렉트 될 경로
+ACCOUNT_LOGOUT_REDIRECT_URL = reverse_lazy('accountapp:login')
+ACCOUNT_LOGOUT_ON_GET = True
 
 ROOT_URLCONF = 'Reverseinha_team.urls'
 
@@ -115,6 +140,13 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+]
+
+AUTHENTICATION_BACKENDS = [
+    # Django 관리자 페이지에서 사용자 이름으로 로그인할 수 있도록 필요
+    "django.contrib.auth.backends.ModelBackend",
+    # 이메일로 로그인과 같은 `allauth` 전용 인증 방법
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 
