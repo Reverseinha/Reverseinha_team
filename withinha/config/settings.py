@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.kakao',
 
 ]
-LOGIN_REDIRECT_URL = 'home/'  # 로그인 후 리다이렉트 될 경로
+
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -68,7 +68,8 @@ CORS_ALLOW_CREDENTIALS = True
 
 SITE_ID = 1
 
-LOGIN_REDIRECT_URL = '/'  # 로그인 후 리다이렉트 될 경로
+LOGIN_REDIRECT_URL = 'with/'  # 로그인 후 리다이렉트 될 경로
+LOGOUT_REDIRECT_URL = 'with/login/'# 로그아웃 성공 시 자동으로 이동할 URL
 ACCOUNT_LOGOUT_REDIRECT_URL = reverse_lazy('accountapp:login')
 ACCOUNT_LOGOUT_ON_GET = True
 
