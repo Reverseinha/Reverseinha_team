@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser, BaseUserManager, PermissionsMixin
 from django.conf import settings
 
 class MyUserManager(BaseUserManager):
@@ -57,24 +57,25 @@ class MyUser(AbstractUser):
     def __str__(self):
         return self.id
 
-class SurveyQuestion(models.Model):
-    question_text = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.question_text
 
 class SurveyResponse(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    question = models.ForeignKey(SurveyQuestion, on_delete=models.CASCADE)
-    answer = models.BooleanField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='survey_responses')
+    answer1 = models.BooleanField(default=False)
+    answer2 = models.BooleanField(default=False)
+    answer3 = models.BooleanField(default=False)
+    answer4 = models.BooleanField(default=False)
+    answer5 = models.BooleanField(default=False)
+    answer6 = models.BooleanField(default=False)
+    answer7 = models.BooleanField(default=False)
+    answer8 = models.BooleanField(default=False)
+    answer9 = models.BooleanField(default=False)
+    answer10 = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.user.id} - {self.question.id}"
-
+        return f"User: {self.user.id}"
+    
 class Post(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(MyUser, on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
