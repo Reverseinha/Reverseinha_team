@@ -20,7 +20,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         validated_data.pop('password_confirm')
         user = MyUser.objects.create_user(**validated_data)
         # 기본 SurveyResponse 생성
-        SurveyResponse.objects.create(user=user)
+        # SurveyResponse.objects.create(user=user)
         return user
 
 class LoginSerializer(serializers.Serializer):
