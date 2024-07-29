@@ -1,23 +1,35 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import *
-from .serializers import *
+from .models import MyUser, SurveyResponse, Post, Comment, Slide, Goal, DiaryEntry, Day
 
-
-@admin.register(MyUser)
-class MyUserAdmin(admin.ModelAdmin):
-    list_display = ('id', 'email', 'username', 'birth_date', 'gender', 'phone_number', 'is_staff', 'last_login')
-    search_fields = ('id', 'email', 'username', 'phone_number')
-    readonly_fields = ('password',)  # 비밀번호를 읽기 전용으로 표시
-
+class MyUserAdmin(UserAdmin):
+    model = MyUser
+    list_display = ('id', 'email', 'username', 'birth_date', 'gender', 'phone_number', 'is_active', 'is_staff', 'is_superuser')
+    list_filter = ('is_active', 'is_staff', 'is_superuser', 'gender')
     fieldsets = (
         (None, {'fields': ('id', 'email', 'password')}),
-        ('Personal info', {'fields': ('username', 'birth_date', 'gender', 'phone_number')}),
+        ('Personal Info', {'fields': ('username', 'birth_date', 'gender', 'phone_number')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
-admin.site.register(SurveyQuestion)
-admin.site.register(SurveyResponse)
-admin.site.register(Slide)
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('id', 'email', 'username', 'birth_date', 'gender', 'phone_number', 'password1', 'password2', 'is_active', 'is_staff', 'is_superuser')}
+        ),
+    )
+    search_fields = ('id', 'email', 'username')
+    ordering = ('id',)
+
+class SurveyResponseAdmin(admin.ModelAdmin):
+    list_display = ('user', 'answer1', 'answer2', 'answer3', 'answer4', 'answer5', 'answer6', 'answer7', 'answer8', 'answer9', 'answer10')
+    list_filter = ('answer1', 'answer2', 'answer3', 'answer4', 'answer5', 'answer6', 'answer7', 'answer8', 'answer9', 'answer10')
+    search_fields = ('user__id',)
+
+admin.site.register(MyUser, MyUserAdmin)
+admin.site.register(SurveyResponse, SurveyResponseAdmin)
 admin.site.register(Post)
 admin.site.register(Comment)
+admin.site.register(Slide)
+admin.site.register(Goal)
+admin.site.register(DiaryEntry)
+admin.site.register(Day)

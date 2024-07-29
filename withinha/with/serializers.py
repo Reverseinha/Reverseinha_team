@@ -1,23 +1,12 @@
 from rest_framework import serializers
-from .models import SurveyQuestion, SurveyResponse, MyUser, Post, Comment, Day, Goal, DiaryEntry
-
-class SurveyQuestionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SurveyQuestion
-        fields = '__all__'
-
-class SurveyResponseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SurveyResponse
-        fields = '__all__'
+from .models import SurveyResponse, MyUser, Post, Comment, Day, Goal, DiaryEntry
 
 class SignUpSerializer(serializers.ModelSerializer):
     password_confirm = serializers.CharField(write_only=True, label="비밀번호 확인")
-    survey_responses = SurveyResponseSerializer(many=True, write_only=True)
 
     class Meta:
         model = MyUser
-        fields = ['id', 'email', 'username', 'birth_date', 'gender', 'phone_number', 'password', 'password_confirm', 'survey_responses']
+        fields = ['id', 'email', 'username', 'birth_date', 'gender', 'phone_number', 'password', 'password_confirm']
         extra_kwargs = {
             'password': {'write_only': True},
         }
@@ -28,27 +17,29 @@ class SignUpSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        survey_responses_data = validated_data.pop('survey_responses')
         validated_data.pop('password_confirm')
         user = MyUser.objects.create_user(**validated_data)
-        
-        for survey_response_data in survey_responses_data:
-            SurveyResponse.objects.create(user=user, **survey_response_data)
-        
+        # 기본 SurveyResponse 생성
+        SurveyResponse.objects.create(user=user)
         return user
 
 class LoginSerializer(serializers.Serializer):
     id = serializers.CharField(label="ID")
     password = serializers.CharField(write_only=True, label="비밀번호")
 
+class SurveyResponseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SurveyResponse
+        fields = ['user', 'answer1', 'answer2', 'answer3', 'answer4', 'answer5', 'answer6', 'answer7', 'answer8', 'answer9', 'answer10']
+
 class PostSerializer(serializers.ModelSerializer):
     total_likes = serializers.ReadOnlyField()
     total_comments = serializers.ReadOnlyField()
-    author_name = serializers.ReadOnlyField(source='author.username')
+    author_name = serializers.ReadOnlyField(source='user.username')  # 수정된 부분
 
     class Meta:
         model = Post
-        fields = ['id', 'title', 'content', 'created_at', 'image', 'author_name', 'total_likes', 'total_comments'] 
+        fields = ['id', 'title', 'content', 'created_at', 'image', 'author_name', 'total_likes', 'total_comments']
         read_only_fields = ['created_at']
 
 class CommentSerializer(serializers.ModelSerializer):

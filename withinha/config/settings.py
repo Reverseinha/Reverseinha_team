@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
 
+
     #provider
     # 페이스북 등 추가하고싶은 것이 있다면 여기에 추가하면 됨.
     'allauth.socialaccount.providers.google',
@@ -62,6 +63,7 @@ MIDDLEWARE = [
 ]
 # CORS 설정 추가
 CORS_ALLOW_ALL_ORIGINS = True  # 모든 도메인에서의 요청을 허용
+CORS_ALLOW_CREDENTIALS = True
 
 
 SITE_ID = 1
@@ -101,6 +103,9 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
 }
 
 REST_USE_JWT = True
