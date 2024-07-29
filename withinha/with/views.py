@@ -46,7 +46,6 @@ def signup(request):
                 'access_token': str(refresh.access_token),
                 'user_id': user.id,
                 'message': '회원가입 성공. 이제 설문조사를 진행해주세요.',
-                'redirect_url': '/signup/survey/'  # 설문조사 페이지 URL
             }, status=201)
     return Response(serializer.errors, status=400)
 

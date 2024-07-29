@@ -11,6 +11,7 @@ urlpatterns = [
     path('login/', login_view, name='login'),  # 로그인
     path('signup/survey/', survey, name='survey'),  # 설문조사 URL 경로
     path('community/', create_post, name='create_post'), # 게시물 작성
+    path('community/all/',get_all_posts, name='get_all_posts'), # 전체 게시물 조회
     path('community/search/', search_posts, name='search_posts'),  # 제목 검색
     path('community/<int:pk>/', get_post, name='get_post'),  # 특정 게시물 조회
     path('community/<int:post_id>/comment/', create_comment, name='create_comment'),  # 댓글 작성

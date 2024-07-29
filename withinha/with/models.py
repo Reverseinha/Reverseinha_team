@@ -58,7 +58,7 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
         return self.id
 
 class SurveyResponse(models.Model):
-    user = models.OneToOneField(MyUser, on_delete=models.CASCADE, related_name='survey_responses')
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='survey_responses')
     answer1 = models.BooleanField(default=False)
     answer2 = models.BooleanField(default=False)
     answer3 = models.BooleanField(default=False)
