@@ -133,6 +133,11 @@ def get_post(request, pk):
     serializer = PostSerializer(post)
     return Response(serializer.data, status=200)
 
+@api_view(['GET'])
+def get_all_posts(request):
+    posts = Post.objects.all().order_by('-created_at')
+    serializer = PostSerializer(posts, many=True)
+    return Response(serializer.data, status=200)
 
 @api_view(['GET'])
 def search_posts(request):
