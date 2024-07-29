@@ -13,12 +13,12 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from drf_yasg.utils import swagger_auto_schema
 from django.db.models import Count, Q
+from django.db import transaction
 from datetime import datetime
 import json
 
-from .models import Goal, DiaryEntry, Post, Comment, SurveyQuestion, SurveyResponse, Day, Slide
-from .serializers import GoalSerializer, DiaryEntrySerializer, PostSerializer, CommentSerializer, SignUpSerializer, LoginSerializer, SurveyQuestionSerializer, SurveyResponseSerializer
-
+from .models import Goal, DiaryEntry, Post, Comment, SurveyResponse, Day, Slide
+from .serializers import GoalSerializer, DiaryEntrySerializer, PostSerializer, CommentSerializer, SignUpSerializer, LoginSerializer, SurveyResponseSerializer
 
 @swagger_auto_schema(
     method="post",
@@ -38,14 +38,17 @@ from .serializers import GoalSerializer, DiaryEntrySerializer, PostSerializer, C
 def signup(request):
     serializer = SignUpSerializer(data=request.data)
     if serializer.is_valid():
-        user = serializer.save()
-        refresh = RefreshToken.for_user(user)
-        return Response({
-            'refresh_token': str(refresh),
-            'access_token': str(refresh.access_token),
-        }, status=201)
+        with transaction.atomic():
+            user = serializer.save()
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh_token': str(refresh),
+                'access_token': str(refresh.access_token),
+                'user_id': user.id,
+                'message': '회원가입 성공. 이제 설문조사를 진행해주세요.',
+                'redirect_url': '/signup/survey/'  # 설문조사 페이지 URL
+            }, status=201)
     return Response(serializer.errors, status=400)
-
 
 @swagger_auto_schema(
     method="post",
@@ -83,35 +86,29 @@ def login_view(request):
             return Response({"error": "Invalid credentials"}, status=402)  # 오류 확인위해 추가
     return Response({"error": "Invalid credentials"}, status=400)
 
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def get_survey_questions(request):
-    questions = SurveyQuestion.objects.all()
-    serializer = SurveyQuestionSerializer(questions, many=True)
-    return Response(serializer.data)
-
-
+@swagger_auto_schema(
+    method="post",
+    tags=["설문조사"],
+    operation_summary="설문조사",
+    operation_description="설문조사를 처리합니다.",
+    request_body=SurveyResponseSerializer(many=True),
+    responses={
+        201: '설문조사 성공',
+        400: '잘못된 요청',
+        500: '서버 오류'
+    }
+)
+@csrf_exempt
 @api_view(['POST'])
-@permission_classes([AllowAny])
-def submit_survey_response(request):
+@permission_classes([IsAuthenticated])
+def survey(request):
+    user = request.user
     serializer = SurveyResponseSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save(user=user)
+        return Response({"message": "설문조사 완료"}, status=201)
+    return Response(serializer.errors, status=400)
 
-
-@login_required
-@api_view(['GET'])
-def get_user_survey_responses(request):
-    user = request.user
-    responses = SurveyResponse.objects.filter(user=user)
-    serializer = SurveyResponseSerializer(responses, many=True)
-    return Response(serializer.data)
-
-
-@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_post(request):
     data = request.data
@@ -146,7 +143,7 @@ def search_posts(request):
 
     if query:
         posts = posts.filter(
-            Q(title__icontains=query) | Q(content__icontains=query)
+            Q(title__icontains=query) | Q(content__icontains(query))
         )
 
     if sort_by == 'latest':
@@ -170,6 +167,11 @@ def create_comment(request, post_pk):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+def get_all_posts(request):
+    posts = Post.objects.all().order_by('-created_at')
+    serializer = PostSerializer(posts, many=True)
+    return Response(serializer.data, status=200)
 
 @api_view(['GET'])
 def get_all_comments(request, post_pk):
