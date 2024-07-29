@@ -9,6 +9,7 @@ urlpatterns = [
     path('', home, name='home'),
     path('signup/', signup, name='signup'),  # 회원가입
     path('login/', login_view, name='login'),  # 로그인
+    path('logout/', logout_view, name='logout'),  # 로그아웃
     path('signup/survey/', survey, name='survey'),  # 설문조사 URL 경로
     path('community/', create_post, name='create_post'), # 게시물 작성
     path('community/search/', search_posts, name='search_posts'),  # 제목 검색

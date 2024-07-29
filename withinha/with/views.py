@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponseForbidden
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
@@ -85,6 +85,27 @@ def login_view(request):
         else:
             return Response({"error": "Invalid credentials"}, status=402)  # 오류 확인위해 추가
     return Response({"error": "Invalid credentials"}, status=400)
+
+
+@swagger_auto_schema(
+    method="post",
+    tags=["로그아웃"],
+    operation_summary="로그아웃",
+    operation_description="로그아웃을 처리합니다.",
+    responses={
+        200: '로그아웃 성공',
+        400: '잘못된 요청',
+        500: '서버 오류'
+    }
+)
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_view(request):
+    logout(request)
+    return Response({
+        'message': '로그아웃 성공'
+    }, status=status.HTTP_200_OK)
 
 @swagger_auto_schema(
     method="post",
