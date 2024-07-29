@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.views import APIView
 from drf_yasg.utils import swagger_auto_schema
 from django.db.models import Count, Q
 from django.db import transaction
@@ -130,24 +131,25 @@ def survey(request):
         return Response({"message": "설문조사 완료"}, status=201)
     return Response(serializer.errors, status=400)
 
-@permission_classes([IsAuthenticated])
-def create_post(request):
-    data = request.data
-    title = data.get('title')
-    content = data.get('content')
-    image = request.FILES.get('image')
+class CreatePostView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    post = Post(
-        title=title,
-        content=content,
-        image=image,
-        author=request.user  # 게시글 작성자 설정
-    )
-    post.save()
-    serializer = PostSerializer(post)
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
+    def post(self, request):
+        data = request.data
+        title = data.get('title')
+        content = data.get('content')
+        image = request.FILES.get('image')
 
-
+        post = Post(
+            title=title,
+            content=content,
+            image=image,
+            user=request.user  # 게시글 작성자 설정
+        )
+        post.save()
+        serializer = PostSerializer(post)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
 @api_view(['GET'])
 def get_post(request, pk):
     post = get_object_or_404(Post, pk=pk)
