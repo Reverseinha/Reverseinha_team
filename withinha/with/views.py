@@ -13,7 +13,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from drf_yasg.utils import swagger_auto_schema
-from django.db.models import Count, Q
+from django.db.models import Q, Count
 from django.db import transaction
 from datetime import datetime
 import json
@@ -152,7 +152,7 @@ class CreatePostView(APIView):
     
 @api_view(['GET'])
 def get_post(request, pk):
-    post = get_object_or_404(Post, pk=pk)
+    post = get_object_or_404(Post, pk)
     serializer = PostSerializer(post)
     return Response(serializer.data, status=200)
 
@@ -167,11 +167,21 @@ def search_posts(request):
     query = request.GET.get('q', '')
     sort_by = request.GET.get('sort', 'latest')
 
+    # 유효한 정렬 기준 리스트
+    valid_sort_options = ['latest', 'oldest', 'popular']
+
+    # 디버깅용 출력
+    print(f"Query: {query}, Sort by: {sort_by}")
+
+    # 유효성 검사
+    if sort_by not in valid_sort_options:
+        return Response({'error': f"Invalid sort option: {sort_by}. Valid options are 'latest', 'oldest', and 'popular'."}, status=400)
+
     posts = Post.objects.all()
 
     if query:
         posts = posts.filter(
-            Q(title__icontains=query) | Q(content__icontains(query))
+            Q(title__icontains=query) | Q(content__icontains=query)
         )
 
     if sort_by == 'latest':
@@ -180,6 +190,9 @@ def search_posts(request):
         posts = posts.order_by('created_at')
     elif sort_by == 'popular':
         posts = posts.annotate(likes_count=Count('likes')).order_by('-likes_count')
+
+    # 디버깅용 출력
+    print(f"Posts after sorting: {posts.query}")
 
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data, status=200)

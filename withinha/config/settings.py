@@ -35,17 +35,16 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt', #추가
     "drf_yasg",
     'corsheaders',
-     #allauth
     'django.contrib.sites',
     'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
+    #'allauth.account',
+    #'allauth.socialaccount',
 
 
     #provider
     # 페이스북 등 추가하고싶은 것이 있다면 여기에 추가하면 됨.
-    'allauth.socialaccount.providers.google',
-    'allauth.socialaccount.providers.kakao',
+    #'allauth.socialaccount.providers.google',
+    #'allauth.socialaccount.providers.kakao',
 
 ]
 
