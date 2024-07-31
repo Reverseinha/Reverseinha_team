@@ -35,7 +35,7 @@ class SurveyResponseSerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer):
     total_likes = serializers.ReadOnlyField()
     total_comments = serializers.ReadOnlyField()
-    author_name = serializers.ReadOnlyField(source='user.username')  # 수정된 부분
+    author_name = serializers.ReadOnlyField(source='user.username')  
 
     class Meta:
         model = Post
