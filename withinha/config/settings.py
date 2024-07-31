@@ -15,7 +15,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'm)xg6+9es(t75ilvij$$(ww_@y!ene*=sf4yr@1qh4kza2+-n*'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False # 배포시 False로 변경 
+DEBUG = True # 배포시 False로 변경 
 
 ALLOWED_HOSTS = ['*']
 
@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt', #추가
     "drf_yasg",
     'corsheaders',
+
     'django.contrib.sites',
     'allauth',
     #'allauth.account',
@@ -69,8 +70,8 @@ SITE_ID = 1
 
 LOGIN_REDIRECT_URL = 'with/'  # 로그인 후 리다이렉트 될 경로
 LOGOUT_REDIRECT_URL = 'with/login/'# 로그아웃 성공 시 자동으로 이동할 URL
-ACCOUNT_LOGOUT_REDIRECT_URL = reverse_lazy('accountapp:login')
-ACCOUNT_LOGOUT_ON_GET = True
+#ACCOUNT_LOGOUT_REDIRECT_URL = reverse_lazy('accountapp:login')
+#ACCOUNT_LOGOUT_ON_GET = True
 
 ROOT_URLCONF = 'Reverseinha_team.urls'
 # 또는 특정 도메인만 허용하려면 아래 설정을 사용

@@ -152,7 +152,7 @@ class CreatePostView(APIView):
     
 @api_view(['GET'])
 def get_post(request, pk):
-    post = get_object_or_404(Post, pk)
+    post = get_object_or_404(Post, pk=pk)
     serializer = PostSerializer(post)
     return Response(serializer.data, status=200)
 
@@ -219,8 +219,8 @@ def get_all_comments(request, post_pk):
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
-def update_comment(request, post_pk, comment_pk):
-    comment = get_object_or_404(Comment, post_id=post_pk, pk=comment_pk)
+def update_comment(request, post_pk, pk):
+    comment = get_object_or_404(Comment, post_id=post_pk, pk=pk)
     if request.user != comment.author:
         return Response({'error': 'You can only edit your own comments.'}, status=status.HTTP_403_FORBIDDEN)
     serializer = CommentSerializer(comment, data=request.data)
@@ -232,8 +232,8 @@ def update_comment(request, post_pk, comment_pk):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def delete_comment(request, post_pk, comment_pk):
-    comment = get_object_or_404(Comment, post_id=post_pk, pk=comment_pk)
+def delete_comment(request, post_pk, pk):
+    comment = get_object_or_404(Comment, post_id=post_pk, pk=pk)
     if request.user != comment.author:
         return Response({'error': 'You can only delete your own comments.'}, status=status.HTTP_403_FORBIDDEN)
     comment.delete()
