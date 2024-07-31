@@ -26,6 +26,7 @@ class MyUser(AbstractUser):
     id = models.CharField(max_length=10, unique=True, primary_key=True)
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=30)  # 사용자 이름
+    nickname = models.CharField(max_length=50, unique=True, null=False, blank=False) # 닉네임 필드 추가
     birth_date = models.DateField()
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     phone_number = models.CharField(max_length=15)
@@ -52,11 +53,10 @@ class MyUser(AbstractUser):
     objects = MyUserManager()
 
     USERNAME_FIELD = 'id'
-    REQUIRED_FIELDS = ['email', 'username', 'birth_date', 'gender', 'phone_number']
+    REQUIRED_FIELDS = ['email', 'username', 'nickname', 'birth_date', 'gender', 'phone_number']  # nickname 필드 추가
 
     def __str__(self):
         return self.id
-
 
 class SurveyResponse(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='survey_responses')

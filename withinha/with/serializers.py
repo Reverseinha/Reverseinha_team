@@ -6,7 +6,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MyUser
-        fields = ['id', 'email', 'username', 'birth_date', 'gender', 'phone_number', 'password', 'password_confirm']
+        fields = ['id', 'email', 'username', 'nickname', 'birth_date', 'gender', 'phone_number', 'password', 'password_confirm']
         extra_kwargs = {
             'password': {'write_only': True},
         }
@@ -22,6 +22,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         # 기본 SurveyResponse 생성
         # SurveyResponse.objects.create(user=user)
         return user
+
 
 class LoginSerializer(serializers.Serializer):
     id = serializers.CharField(label="ID")

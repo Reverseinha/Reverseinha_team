@@ -4,21 +4,22 @@ from .models import MyUser, SurveyResponse, Post, Comment, Slide, Goal, DiaryEnt
 
 class MyUserAdmin(UserAdmin):
     model = MyUser
-    list_display = ('id', 'email', 'username', 'birth_date', 'gender', 'phone_number', 'is_active', 'is_staff', 'is_superuser')
+    list_display = ('id', 'email', 'username', 'nickname', 'birth_date', 'gender', 'phone_number', 'is_active', 'is_staff', 'is_superuser')
     list_filter = ('is_active', 'is_staff', 'is_superuser', 'gender')
     fieldsets = (
         (None, {'fields': ('id', 'email', 'password')}),
-        ('Personal Info', {'fields': ('username', 'birth_date', 'gender', 'phone_number')}),
+        ('Personal Info', {'fields': ('username', 'nickname', 'birth_date', 'gender', 'phone_number')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('id', 'email', 'username', 'birth_date', 'gender', 'phone_number', 'password1', 'password2', 'is_active', 'is_staff', 'is_superuser')}
+            'fields': ('id', 'email', 'username', 'nickname', 'birth_date', 'gender', 'phone_number', 'password1', 'password2', 'is_active', 'is_staff', 'is_superuser')}
         ),
     )
-    search_fields = ('id', 'email', 'username')
+    search_fields = ('id', 'email', 'username', 'nickname')
     ordering = ('id',)
+
 
 class SurveyResponseAdmin(admin.ModelAdmin):
     list_display = ('user', 'answer1', 'answer2', 'answer3', 'answer4', 'answer5', 'answer6', 'answer7', 'answer8', 'answer9', 'answer10')
