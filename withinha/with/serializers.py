@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import SurveyResponse, MyUser, Post, Comment, Day, Goal, DiaryEntry
+from .models import CounselingRequest
+from datetime import date
 
 class SignUpSerializer(serializers.ModelSerializer):
     password_confirm = serializers.CharField(write_only=True, label="비밀번호 확인")
@@ -33,6 +35,9 @@ class SurveyResponseSerializer(serializers.ModelSerializer):
         model = SurveyResponse
         fields = ['user', 'answer1', 'answer2', 'answer3', 'answer4', 'answer5', 'answer6', 'answer7', 'answer8', 'answer9', 'answer10']
 
+    def get_score(self, obj):
+        return obj.calculate_score()
+    
 class PostSerializer(serializers.ModelSerializer):
     total_likes = serializers.ReadOnlyField()
     total_comments = serializers.ReadOnlyField()
@@ -57,27 +62,40 @@ class DaySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class GoalSerializer(serializers.ModelSerializer):
-    day = DaySerializer()
-
     class Meta:
         model = Goal
-        fields = '__all__'
-
-    def create(self, validated_data):
-        day_data = validated_data.pop('day')
-        day, created = Day.objects.get_or_create(date=day_data['date'])
-        goal = Goal.objects.create(day=day, **validated_data)
-        return goal
+        fields = ['user', 'day', 'text', 'is_completed']
 
 class DiaryEntrySerializer(serializers.ModelSerializer):
-    day = DaySerializer()
-
     class Meta:
         model = DiaryEntry
-        fields = '__all__'
+        fields = ['user', 'day', 'title', 'content']
 
+class GoalDiarySerializer(serializers.Serializer):
+    goal = GoalSerializer()
+    diary_entry = DiaryEntrySerializer()
+    
     def create(self, validated_data):
-        day_data = validated_data.pop('day')
-        day, created = Day.objects.get_or_create(date=day_data['date'])
-        diary_entry = DiaryEntry.objects.create(day=day, **validated_data)
-        return diary_entry
+        goal_data = validated_data.pop('goal')
+        diary_entry_data = validated_data.pop('diary_entry')
+        
+        goal = Goal.objects.create(**goal_data)
+        diary_entry = DiaryEntry.objects.create(**diary_entry_data)
+        
+        return {'goal': goal, 'diary_entry': diary_entry}
+    
+def calculate_age(birth_date):
+    today = date.today()
+    age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+    return age
+
+class CounselingRequestSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+    age = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CounselingRequest
+        fields = ['username', 'age', 'available_time', 'reason']
+
+    def get_age(self, obj):
+        return calculate_age(obj.user.birth_date)

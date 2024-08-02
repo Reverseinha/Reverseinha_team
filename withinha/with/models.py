@@ -26,7 +26,7 @@ class MyUser(AbstractUser):
     id = models.CharField(max_length=10, unique=True, primary_key=True)
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=30)  # 사용자 이름
-    nickname = models.CharField(max_length=50, unique=True, null=False, blank=False) # 닉네임 필드 추가
+    nickname = models.CharField(max_length=255, null=True, default='unknown')  
     birth_date = models.DateField()
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     phone_number = models.CharField(max_length=15)
@@ -73,6 +73,12 @@ class SurveyResponse(models.Model):
 
     def __str__(self):
         return f"User: {self.user.id}"
+    
+    def calculate_score(self):
+        answers = [self.answer1, self.answer2, self.answer3, self.answer4, self.answer5, 
+                   self.answer6, self.answer7, self.answer8, self.answer9, self.answer10]
+        score = sum(10 for answer in answers if answer)
+        return score
     
 class Post(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -134,3 +140,11 @@ class DiaryEntry(models.Model):
 
     def __str__(self):
         return self.title
+    
+class CounselingRequest(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    available_time = models.CharField(max_length=200)
+    reason = models.TextField()
+
+    def __str__(self):
+        return f"{self.user.username} - {self.available_time}"
