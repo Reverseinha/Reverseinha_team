@@ -15,12 +15,12 @@ from rest_framework.views import APIView
 from drf_yasg.utils import swagger_auto_schema
 from django.db.models import Q, Count
 from django.db import transaction
-from datetime import datetime
 import json
-
+import datetime
 from .models import Goal, DiaryEntry, Post, Comment, SurveyResponse, Day, Slide
-from .serializers import GoalSerializer, DiaryEntrySerializer, PostSerializer, CommentSerializer, SignUpSerializer, LoginSerializer, SurveyResponseSerializer
-
+from .serializers import GoalSerializer, DiaryEntrySerializer, PostSerializer, CommentSerializer, SignUpSerializer, LoginSerializer, SurveyResponseSerializer, GoalDiarySerializer
+from .models import CounselingRequest
+from .serializers import CounselingRequestSerializer
 @swagger_auto_schema(
     method="post",
     tags=["회원가입"],
@@ -127,9 +127,11 @@ def survey(request):
     user = request.user
     serializer = SurveyResponseSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save(user=user)
-        return Response({"message": "설문조사 완료"}, status=201)
-    return Response(serializer.errors, status=400)
+        survey_response = serializer.save(user=user)
+        response_data = serializer.data
+        response_data['score'] = survey_response.calculate_score()
+        return Response(response_data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CreatePostView(APIView):
     permission_classes = [IsAuthenticated]
@@ -255,7 +257,7 @@ class GoalDiaryViewSet(viewsets.ViewSet):
             return Response({"detail": "Date parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            date = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
         except ValueError:
             return Response({"detail": "Invalid date format. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -272,36 +274,86 @@ class GoalDiaryViewSet(viewsets.ViewSet):
         })
 
     @action(detail=False, methods=['post'])
-    def create_goal(self, request):
+    def create_goal_diary(self, request):
         data = request.data
-        data['user'] = request.user.id
-        serializer = GoalSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        goal_data = data.get('goal')
+        diary_entry_data = data.get('diary_entry')
+
+        if not goal_data or not diary_entry_data:
+            return Response({"detail": "Both goal and diary_entry data are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        day_date = goal_data.get('day')
+        day, created = Day.objects.get_or_create(date=day_date)
+        goal_data['day'] = day.id
+        diary_entry_data['day'] = day.id
+
+        goal_data['user'] = request.user.id
+        diary_entry_data['user'] = request.user.id
+
+        goal_instance = Goal.objects.filter(user=request.user, day=day).first()
+        diary_entry_instance = DiaryEntry.objects.filter(user=request.user, day=day).first()
+
+        goal_serializer = GoalSerializer(instance=goal_instance, data=goal_data)
+        diary_entry_serializer = DiaryEntrySerializer(instance=diary_entry_instance, data=diary_entry_data)
+
+        if goal_serializer.is_valid() and diary_entry_serializer.is_valid():
+            goal_serializer.save()
+            diary_entry_serializer.save()
+            return Response({
+                'goal': goal_serializer.data,
+                'diary_entry': diary_entry_serializer.data
+            }, status=status.HTTP_201_CREATED)
+
+        errors = {
+            'goal_errors': goal_serializer.errors,
+            'diary_entry_errors': diary_entry_serializer.errors
+        }
+        return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'])
-    def create_diary_entry(self, request):
+    def update_goal_diary(self, request):
         data = request.data
-        data['user'] = request.user.id
-        serializer = DiaryEntrySerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        goal_data = data.get('goal')
+        diary_entry_data = data.get('diary_entry')
 
-    @action(detail=True, methods=['put'])
-    def update_diary_entry(self, request, pk=None):
-        diary_entry = DiaryEntry.objects.get(pk=pk, user=request.user)
-        serializer = DiaryEntrySerializer(diary_entry, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if not goal_data or not diary_entry_data:
+            return Response({"detail": "Both goal and diary_entry data are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['delete'])
-    def delete_diary_entry(self, request, pk=None):
-        diary_entry = DiaryEntry.objects.get(pk=pk, user=request.user)
-        diary_entry.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        day_date = goal_data.get('day')
+        day, created = Day.objects.get_or_create(date=day_date)
+        goal_data['day'] = day.id
+        diary_entry_data['day'] = day.id
+
+        goal_data['user'] = request.user.id
+        diary_entry_data['user'] = request.user.id
+
+        goal_instance = Goal.objects.filter(user=request.user, day=day).first()
+        diary_entry_instance = DiaryEntry.objects.filter(user=request.user, day=day).first()
+
+        goal_serializer = GoalSerializer(instance=goal_instance, data=goal_data)
+        diary_entry_serializer = DiaryEntrySerializer(instance=diary_entry_instance, data=diary_entry_data)
+
+        if goal_serializer.is_valid() and diary_entry_serializer.is_valid():
+            goal_serializer.save()
+            diary_entry_serializer.save()
+            return Response({
+                'goal': goal_serializer.data,
+                'diary_entry': diary_entry_serializer.data
+            }, status=status.HTTP_201_CREATED)
+
+        errors = {
+            'goal_errors': goal_serializer.errors,
+            'diary_entry_errors': diary_entry_serializer.errors
+        }
+        return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class CounselingRequestViewSet(viewsets.ModelViewSet):
+    queryset = CounselingRequest.objects.all()
+    serializer_class = CounselingRequestSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+   
