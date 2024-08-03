@@ -41,13 +41,20 @@ class SurveyResponseSerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer):
     total_likes = serializers.ReadOnlyField()
     total_comments = serializers.ReadOnlyField()
-    author_name = serializers.ReadOnlyField(source='user.username')  
+    author_name = serializers.ReadOnlyField(source='user.username')
+    liked_by_user = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
-        fields = ['id', 'title', 'content', 'created_at', 'image', 'author_name', 'total_likes', 'total_comments']
+        fields = ['id', 'title', 'content', 'created_at', 'image', 'author_name', 'total_likes', 'total_comments', 'liked_by_user']
         read_only_fields = ['created_at']
 
+    def get_liked_by_user(self, obj):
+        request = self.context.get('request', None)
+        if request:
+            return request.user in obj.likes.all()
+        return False
+    
 class CommentSerializer(serializers.ModelSerializer):
     author_username = serializers.CharField(source='author.username', read_only=True)
     
@@ -62,27 +69,31 @@ class DaySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class GoalSerializer(serializers.ModelSerializer):
+
+
     class Meta:
         model = Goal
-        fields = ['user', 'day', 'text', 'is_completed']
+        fields = ['text', 'is_completed']
 
 class DiaryEntrySerializer(serializers.ModelSerializer):
+
+
     class Meta:
         model = DiaryEntry
-        fields = ['user', 'day', 'title', 'content']
+        fields = ['title', 'content']
 
 class GoalDiarySerializer(serializers.Serializer):
-    goal = GoalSerializer()
+    goals = GoalSerializer(many=True)  # Goal을 여러 개 처리하도록 수정합니다.
     diary_entry = DiaryEntrySerializer()
     
     def create(self, validated_data):
-        goal_data = validated_data.pop('goal')
+        goals_data = validated_data.pop('goals')
         diary_entry_data = validated_data.pop('diary_entry')
         
-        goal = Goal.objects.create(**goal_data)
+        goals = [Goal.objects.create(**goal_data) for goal_data in goals_data]
         diary_entry = DiaryEntry.objects.create(**diary_entry_data)
         
-        return {'goal': goal, 'diary_entry': diary_entry}
+        return {'goals': goals, 'diary_entry': diary_entry}
     
 def calculate_age(birth_date):
     today = date.today()
@@ -95,7 +106,14 @@ class CounselingRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CounselingRequest
-        fields = ['username', 'age', 'available_time', 'reason']
+        fields = ['username', 'age', 'available_time', 'reason', 'phone_number']  
 
     def get_age(self, obj):
         return calculate_age(obj.user.birth_date)
+    
+class MyPageSerializer(serializers.Serializer):
+    survey_score = serializers.IntegerField()
+    diary_entries = DiaryEntrySerializer(many=True)
+    counseling_requests = CounselingRequestSerializer(many=True)
+    goals = GoalSerializer(many=True)
+    goal_achievement_rate = serializers.FloatField()

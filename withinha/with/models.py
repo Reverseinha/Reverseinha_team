@@ -127,8 +127,7 @@ class Goal(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     day = models.ForeignKey(Day, on_delete=models.CASCADE, related_name='goals')
     text = models.CharField(max_length=200)
-    is_completed = models.BooleanField(default=False)
-
+    is_completed = models.BooleanField(null=True, blank=True, default=None)  
     def __str__(self):
         return self.text
 
@@ -145,6 +144,7 @@ class CounselingRequest(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     available_time = models.CharField(max_length=200)
     reason = models.TextField()
+    phone_number = models.CharField(max_length=15)  
 
     def __str__(self):
         return f"{self.user.username} - {self.available_time}"

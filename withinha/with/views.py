@@ -199,6 +199,44 @@ def search_posts(request):
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data, status=200)
 
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_post(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    if request.user != post.user:
+        return Response({'error': 'You can only edit your own posts.'}, status=status.HTTP_403_FORBIDDEN)
+    
+    data = request.data
+    post.title = data.get('title', post.title)
+    post.content = data.get('content', post.content)
+    
+    if 'image' in request.FILES:
+        post.image = request.FILES['image']
+
+    post.save()
+    serializer = PostSerializer(post)
+    return Response(serializer.data, status=200)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_like(request, post_pk):
+    post = get_object_or_404(Post, pk=post_pk)
+    if request.user in post.likes.all():
+        post.likes.remove(request.user)
+        message = "Like removed."
+    else:
+        post.likes.add(request.user)
+        message = "Liked."
+    return Response({'message': message, 'total_likes': post.total_likes}, status=status.HTTP_200_OK)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_post(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    if request.user != post.user:
+        return Response({'error': 'You can only delete your own posts.'}, status=status.HTTP_403_FORBIDDEN)
+    post.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -246,8 +284,6 @@ def delete_comment(request, post_pk, pk):
 def home(request):
     slides = Slide.objects.all()
     return render(request, {'slides': slides})
-
-
 class GoalDiaryViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
@@ -276,76 +312,98 @@ class GoalDiaryViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['post'])
     def create_goal_diary(self, request):
         data = request.data
-        goal_data = data.get('goal')
+        goals_data = data.get('goals')
         diary_entry_data = data.get('diary_entry')
 
-        if not goal_data or not diary_entry_data:
-            return Response({"detail": "Both goal and diary_entry data are required."}, status=status.HTTP_400_BAD_REQUEST)
+        if not goals_data or not diary_entry_data:
+            return Response({"detail": "Both goals and diary_entry data are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        day_date = goal_data.get('day')
+        day_date_str = goals_data[0].get('day')
+        try:
+            day_date = datetime.datetime.strptime(day_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return Response({"detail": "Invalid date format. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+
         day, created = Day.objects.get_or_create(date=day_date)
-        goal_data['day'] = day.id
-        diary_entry_data['day'] = day.id
 
-        goal_data['user'] = request.user.id
+        goals = []
+        for goal_data in goals_data:
+            goal_data['day'] = day.id  # 수정된 부분
+            goal_data['user'] = request.user.id
+            print(f"Creating goal with data: {goal_data}")  # 디버깅 출력
+            goal_instance = Goal.objects.filter(user=request.user, day=day, text=goal_data['text']).first()
+            goal_serializer = GoalSerializer(instance=goal_instance, data=goal_data)
+            if goal_serializer.is_valid():
+                goal_serializer.save()
+                goals.append(goal_serializer.data)
+            else:
+                print(f"Goal serialization error: {goal_serializer.errors}")  # 디버깅 출력
+                return Response(goal_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        diary_entry_data['day'] = day.id  # 수정된 부분
         diary_entry_data['user'] = request.user.id
-
-        goal_instance = Goal.objects.filter(user=request.user, day=day).first()
+        print(f"Creating diary entry with data: {diary_entry_data}")  # 디버깅 출력
         diary_entry_instance = DiaryEntry.objects.filter(user=request.user, day=day).first()
-
-        goal_serializer = GoalSerializer(instance=goal_instance, data=goal_data)
         diary_entry_serializer = DiaryEntrySerializer(instance=diary_entry_instance, data=diary_entry_data)
 
-        if goal_serializer.is_valid() and diary_entry_serializer.is_valid():
-            goal_serializer.save()
+        if diary_entry_serializer.is_valid():
             diary_entry_serializer.save()
-            return Response({
-                'goal': goal_serializer.data,
-                'diary_entry': diary_entry_serializer.data
-            }, status=status.HTTP_201_CREATED)
+        else:
+            print(f"Diary entry serialization error: {diary_entry_serializer.errors}")  # 디버깅 출력
+            return Response(diary_entry_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        errors = {
-            'goal_errors': goal_serializer.errors,
-            'diary_entry_errors': diary_entry_serializer.errors
-        }
-        return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'goals': goals,
+            'diary_entry': diary_entry_serializer.data
+        }, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['post'])
     def update_goal_diary(self, request):
         data = request.data
-        goal_data = data.get('goal')
+        goals_data = data.get('goals')
         diary_entry_data = data.get('diary_entry')
 
-        if not goal_data or not diary_entry_data:
-            return Response({"detail": "Both goal and diary_entry data are required."}, status=status.HTTP_400_BAD_REQUEST)
+        if not goals_data or not diary_entry_data:
+            return Response({"detail": "Both goals and diary_entry data are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        day_date = goal_data.get('day')
+        day_date_str = goals_data[0].get('day')
+        try:
+            day_date = datetime.datetime.strptime(day_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return Response({"detail": "Invalid date format. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+
         day, created = Day.objects.get_or_create(date=day_date)
-        goal_data['day'] = day.id
-        diary_entry_data['day'] = day.id
 
-        goal_data['user'] = request.user.id
+        goals = []
+        for goal_data in goals_data:
+            goal_data['day'] = day.id  # 수정된 부분
+            goal_data['user'] = request.user.id
+            print(f"Updating goal with data: {goal_data}")  # 디버깅 출력
+            goal_instance = Goal.objects.filter(user=request.user, day=day, text=goal_data['text']).first()
+            goal_serializer = GoalSerializer(instance=goal_instance, data=goal_data)
+            if goal_serializer.is_valid():
+                goal_serializer.save()
+                goals.append(goal_serializer.data)
+            else:
+                print(f"Goal serialization error: {goal_serializer.errors}")  # 디버깅 출력
+                return Response(goal_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        diary_entry_data['day'] = day.id  # 수정된 부분
         diary_entry_data['user'] = request.user.id
-
-        goal_instance = Goal.objects.filter(user=request.user, day=day).first()
+        print(f"Updating diary entry with data: {diary_entry_data}")  # 디버깅 출력
         diary_entry_instance = DiaryEntry.objects.filter(user=request.user, day=day).first()
-
-        goal_serializer = GoalSerializer(instance=goal_instance, data=goal_data)
         diary_entry_serializer = DiaryEntrySerializer(instance=diary_entry_instance, data=diary_entry_data)
 
-        if goal_serializer.is_valid() and diary_entry_serializer.is_valid():
-            goal_serializer.save()
+        if diary_entry_serializer.is_valid():
             diary_entry_serializer.save()
-            return Response({
-                'goal': goal_serializer.data,
-                'diary_entry': diary_entry_serializer.data
-            }, status=status.HTTP_201_CREATED)
+        else:
+            print(f"Diary entry serialization error: {diary_entry_serializer.errors}")  # 디버깅 출력
+            return Response(diary_entry_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        errors = {
-            'goal_errors': goal_serializer.errors,
-            'diary_entry_errors': diary_entry_serializer.errors
-        }
-        return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'goals': goals,
+            'diary_entry': diary_entry_serializer.data
+        }, status=status.HTTP_201_CREATED)
     
 class CounselingRequestViewSet(viewsets.ModelViewSet):
     queryset = CounselingRequest.objects.all()
@@ -356,4 +414,34 @@ class CounselingRequestViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
-   
+class MyPageView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        # 설문조사 점수 조회
+        survey_response = SurveyResponse.objects.filter(user=user).first()
+        survey_score = survey_response.calculate_score() if survey_response else 0
+
+        # 일기 조회
+        diary_entries = DiaryEntry.objects.filter(user=user)
+
+        # 상담 신청 기록 조회
+        counseling_requests = CounselingRequest.objects.filter(user=user)
+
+        # 목표 조회 및 목표 달성 비율 계산
+        goals = Goal.objects.filter(user=user)
+        total_goals = goals.count()
+        completed_goals = goals.filter(is_completed=True).count()
+        goal_achievement_rate = (completed_goals / total_goals * 100) if total_goals > 0 else 0
+
+        data = {
+            "survey_score": survey_score,
+            "diary_entries": DiaryEntrySerializer(diary_entries, many=True).data,
+            "counseling_requests": CounselingRequestSerializer(counseling_requests, many=True).data,
+            "goals": GoalSerializer(goals, many=True).data,
+            "goal_achievement_rate": goal_achievement_rate
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
