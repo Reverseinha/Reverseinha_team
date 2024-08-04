@@ -36,8 +36,8 @@ INSTALLED_APPS = [
     "drf_yasg",
     'corsheaders',
 
-    'django.contrib.sites',
-    'allauth',
+    # 'django.contrib.sites',
+    # 'allauth',
     #'allauth.account',
     #'allauth.socialaccount',
 
@@ -59,14 +59,14 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
      # 추가할 미들웨어
-    'allauth.account.middleware.AccountMiddleware',
+    # 'allauth.account.middleware.AccountMiddleware',
 ]
 # CORS 설정 추가
 CORS_ALLOW_ALL_ORIGINS = True  # 모든 도메인에서의 요청을 허용
 CORS_ALLOW_CREDENTIALS = True
 
 
-SITE_ID = 1
+# SITE_ID = 1
 
 LOGIN_REDIRECT_URL = 'with/'  # 로그인 후 리다이렉트 될 경로
 LOGOUT_REDIRECT_URL = 'with/login/'# 로그아웃 성공 시 자동으로 이동할 URL
@@ -157,7 +157,7 @@ AUTHENTICATION_BACKENDS = [
     # Django 관리자 페이지에서 사용자 이름으로 로그인할 수 있도록 필요
     "django.contrib.auth.backends.ModelBackend",
     # 이메일로 로그인과 같은 `allauth` 전용 인증 방법
-    "allauth.account.auth_backends.AuthenticationBackend",
+    # "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 # Internationalization
