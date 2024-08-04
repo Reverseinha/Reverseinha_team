@@ -434,3 +434,22 @@ class MyPageView(APIView):
         }
 
         return Response(data, status=status.HTTP_200_OK)
+    
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_survey(request):
+    user = request.user
+    try:
+        survey_response = SurveyResponse.objects.get(user=user)
+        serializer = SurveyResponseSerializer(survey_response, data=request.data)
+    except SurveyResponse.DoesNotExist:
+        serializer = SurveyResponseSerializer(data=request.data)
+
+    if serializer.is_valid():
+        with transaction.atomic():
+            survey_response = serializer.save(user=user)
+            response_data = serializer.data
+            response_data['score'] = survey_response.calculate_score()
+            return Response(response_data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
