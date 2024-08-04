@@ -1,10 +1,12 @@
 from django.urls import path
-from .views import GoalDiaryViewSet, home, signup, login_view, logout_view, survey, CreatePostView, search_posts, get_all_posts, get_post, create_comment, get_all_comments, delete_comment, update_comment,CounselingRequestViewSet, update_post, delete_post, toggle_like, MyPageView
+from .views import *
 urlpatterns = [
     path('', home, name='home'),
     path('signup/', signup, name='signup'),  # 회원가입
     path('login/', login_view, name='login'),  # 로그인
     path('logout/', logout_view, name='logout'),  # 로그아웃
+    path('user/id/', get_user_id, name='get_user_id'),  # 사용자 ID 조회
+    path('user/nickname/', get_user_nickname, name='get_user_nickname'),  # 사용자 닉네임 조회
     path('signup/survey/', survey, name='survey'),  # 설문조사 URL 경로
     path('community/', CreatePostView.as_view(), name='create_post'),  # 게시물 작성
     path('community/search/', search_posts, name='search_posts'),  # 제목 검색
