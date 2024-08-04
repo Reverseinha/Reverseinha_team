@@ -20,7 +20,7 @@ import datetime
 from .models import Goal, DiaryEntry, Post, Comment, SurveyResponse, Day, Slide
 from .serializers import GoalSerializer, DiaryEntrySerializer, PostSerializer, CommentSerializer, SignUpSerializer, LoginSerializer, SurveyResponseSerializer, GoalDiarySerializer
 from .models import CounselingRequest
-from .serializers import CounselingRequestSerializer
+from .serializers import CounselingRequestSerializer    
 @swagger_auto_schema(
     method="post",
     tags=["회원가입"],
@@ -445,3 +445,15 @@ class MyPageView(APIView):
         }
 
         return Response(data, status=status.HTTP_200_OK)
+    
+
+
+@api_view(['GET'])
+def get_user_id(request):
+    user_id = request.user.id
+    return Response({'id': user_id}, status=200)
+
+@api_view(['GET'])
+def get_user_nickname(request):
+    nickname = request.user.nickname
+    return Response({'nickname': nickname}, status=200)
