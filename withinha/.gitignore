@@ -3,4 +3,4 @@ migrations
 .DS_Store
 __pycache__
 static
-virtual
+virtual.DS_Store
