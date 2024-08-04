@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 from drf_yasg.utils import swagger_auto_schema
 from django.db.models import Q, Count
 from django.db import transaction
+from .serializers import DiaryEntrySerializer
 import json
 import datetime
 from .models import Goal, DiaryEntry, Post, Comment, SurveyResponse, Day, Slide
@@ -284,6 +285,89 @@ def delete_comment(request, post_pk, pk):
 def home(request):
     slides = Slide.objects.all()
     return render(request, {'slides': slides})
+
+class GoalViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = Goal.objects.all()
+    serializer_class = GoalSerializer
+
+    def perform_create(self, serializer):
+        day_date_str = self.request.data.get('day')
+        try:
+            day_date = datetime.datetime.strptime(day_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return Response({"detail": "Invalid date format. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+
+        day, created = Day.objects.get_or_create(date=day_date)
+        serializer.save(user=self.request.user, day=day)
+
+    @action(detail=True, methods=['post'], url_path='completed')
+    def mark_completed(self, request, pk=None):
+        try:
+            goal = self.get_object()
+            is_completed = request.data.get('is_completed')
+
+            if is_completed is not None:
+                goal.is_completed = is_completed
+                goal.save()
+                return Response(GoalSerializer(goal).data)
+            else:
+                return Response({"detail": "is_completed field is required."}, status=status.HTTP_400_BAD_REQUEST)
+        except Goal.DoesNotExist:
+            return Response({"detail": "Goal not found."}, status=status.HTTP_404_NOT_FOUND)
+    
+class DiaryEntryViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = DiaryEntry.objects.all()
+    serializer_class = DiaryEntrySerializer
+
+    def perform_create(self, serializer):
+        day_date_str = self.request.data.get('day')
+        try:
+            day_date = datetime.datetime.strptime(day_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return Response({"detail": "Invalid date format. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+
+        day, created = Day.objects.get_or_create(date=day_date)
+        serializer.save(user=self.request.user, day=day)
+
+    @action(detail=False, methods=['post'], url_path='update')
+    def update_entry(self, request):
+        day_date_str = request.data.get('day')
+        try:
+            day_date = datetime.datetime.strptime(day_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return Response({"detail": "Invalid date format. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            diary_entry = DiaryEntry.objects.get(day__date=day_date, user=request.user)
+        except DiaryEntry.DoesNotExist:
+            return Response({"detail": "Diary entry not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        day, created = Day.objects.get_or_create(date=day_date)
+        serializer = self.get_serializer(diary_entry, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save(user=self.request.user, day=day)
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['delete'], url_path='delete')
+    def delete_entry(self, request):
+        day_date_str = request.data.get('day')
+        try:
+            day_date = datetime.datetime.strptime(day_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return Response({"detail": "Invalid date format. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            diary_entry = DiaryEntry.objects.get(day__date=day_date, user=request.user)
+        except DiaryEntry.DoesNotExist:
+            return Response({"detail": "Diary entry not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        diary_entry.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 class GoalDiaryViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
@@ -309,101 +393,6 @@ class GoalDiaryViewSet(viewsets.ViewSet):
             'diary_entries': diary_entries_serializer.data
         })
 
-    @action(detail=False, methods=['post'])
-    def create_goal_diary(self, request):
-        data = request.data
-        goals_data = data.get('goals')
-        diary_entry_data = data.get('diary_entry')
-
-        if not goals_data or not diary_entry_data:
-            return Response({"detail": "Both goals and diary_entry data are required."}, status=status.HTTP_400_BAD_REQUEST)
-
-        day_date_str = goals_data[0].get('day')
-        try:
-            day_date = datetime.datetime.strptime(day_date_str, '%Y-%m-%d').date()
-        except ValueError:
-            return Response({"detail": "Invalid date format. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
-
-        day, created = Day.objects.get_or_create(date=day_date)
-
-        goals = []
-        for goal_data in goals_data:
-            goal_data['day'] = day.id  # 수정된 부분
-            goal_data['user'] = request.user.id
-            print(f"Creating goal with data: {goal_data}")  # 디버깅 출력
-            goal_instance = Goal.objects.filter(user=request.user, day=day, text=goal_data['text']).first()
-            goal_serializer = GoalSerializer(instance=goal_instance, data=goal_data)
-            if goal_serializer.is_valid():
-                goal_serializer.save()
-                goals.append(goal_serializer.data)
-            else:
-                print(f"Goal serialization error: {goal_serializer.errors}")  # 디버깅 출력
-                return Response(goal_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        diary_entry_data['day'] = day.id  # 수정된 부분
-        diary_entry_data['user'] = request.user.id
-        print(f"Creating diary entry with data: {diary_entry_data}")  # 디버깅 출력
-        diary_entry_instance = DiaryEntry.objects.filter(user=request.user, day=day).first()
-        diary_entry_serializer = DiaryEntrySerializer(instance=diary_entry_instance, data=diary_entry_data)
-
-        if diary_entry_serializer.is_valid():
-            diary_entry_serializer.save()
-        else:
-            print(f"Diary entry serialization error: {diary_entry_serializer.errors}")  # 디버깅 출력
-            return Response(diary_entry_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({
-            'goals': goals,
-            'diary_entry': diary_entry_serializer.data
-        }, status=status.HTTP_201_CREATED)
-
-    @action(detail=False, methods=['post'])
-    def update_goal_diary(self, request):
-        data = request.data
-        goals_data = data.get('goals')
-        diary_entry_data = data.get('diary_entry')
-
-        if not goals_data or not diary_entry_data:
-            return Response({"detail": "Both goals and diary_entry data are required."}, status=status.HTTP_400_BAD_REQUEST)
-
-        day_date_str = goals_data[0].get('day')
-        try:
-            day_date = datetime.datetime.strptime(day_date_str, '%Y-%m-%d').date()
-        except ValueError:
-            return Response({"detail": "Invalid date format. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
-
-        day, created = Day.objects.get_or_create(date=day_date)
-
-        goals = []
-        for goal_data in goals_data:
-            goal_data['day'] = day.id  # 수정된 부분
-            goal_data['user'] = request.user.id
-            print(f"Updating goal with data: {goal_data}")  # 디버깅 출력
-            goal_instance = Goal.objects.filter(user=request.user, day=day, text=goal_data['text']).first()
-            goal_serializer = GoalSerializer(instance=goal_instance, data=goal_data)
-            if goal_serializer.is_valid():
-                goal_serializer.save()
-                goals.append(goal_serializer.data)
-            else:
-                print(f"Goal serialization error: {goal_serializer.errors}")  # 디버깅 출력
-                return Response(goal_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        diary_entry_data['day'] = day.id  # 수정된 부분
-        diary_entry_data['user'] = request.user.id
-        print(f"Updating diary entry with data: {diary_entry_data}")  # 디버깅 출력
-        diary_entry_instance = DiaryEntry.objects.filter(user=request.user, day=day).first()
-        diary_entry_serializer = DiaryEntrySerializer(instance=diary_entry_instance, data=diary_entry_data)
-
-        if diary_entry_serializer.is_valid():
-            diary_entry_serializer.save()
-        else:
-            print(f"Diary entry serialization error: {diary_entry_serializer.errors}")  # 디버깅 출력
-            return Response(diary_entry_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({
-            'goals': goals,
-            'diary_entry': diary_entry_serializer.data
-        }, status=status.HTTP_201_CREATED)
     
 class CounselingRequestViewSet(viewsets.ModelViewSet):
     queryset = CounselingRequest.objects.all()
