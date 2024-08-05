@@ -466,3 +466,28 @@ def update_survey(request):
             response_data['score'] = survey_response.calculate_score()
             return Response(response_data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_survey(self, request):
+        user = request.user
+
+        # 설문조사 점수 조회
+        survey_response = SurveyResponse.objects.filter(user=user).first()
+        survey_score = survey_response.calculate_score() if survey_response else 0
+
+        data = {
+            "survey_score": survey_score
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
+
+@action(detail=True, methods=['delete'], url_path='delete')
+def delete_goal(self, request, pk=None):
+        try:
+            goal = self.get_object()
+            goal.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Goal.DoesNotExist:
+            return Response({"detail": "Goal not found."}, status=status.HTTP_404_NOT_FOUND)
