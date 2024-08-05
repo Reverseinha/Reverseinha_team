@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import MyUser, SurveyResponse, Post, Comment, Slide, Goal, DiaryEntry, Day
+from .models import MyUser, SurveyResponse, Post, Comment, Slide, Goal, DiaryEntry, Day, CounselingRequest
 
 class MyUserAdmin(UserAdmin):
     model = MyUser
@@ -34,3 +34,4 @@ admin.site.register(Slide)
 admin.site.register(Goal)
 admin.site.register(DiaryEntry)
 admin.site.register(Day)
+admin.site.register(CounselingRequest)
