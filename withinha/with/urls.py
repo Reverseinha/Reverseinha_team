@@ -27,7 +27,7 @@ urlpatterns = [
     path('calendar/diary/create/', DiaryEntryViewSet.as_view({'post': 'create'}), name='create_diary'),  # 일기 생성
     path('calendar/diary/update/', DiaryEntryViewSet.as_view({'post': 'update_entry'}), name='update_diary'),  # 일기 수정
     path('calendar/diary/delete/', DiaryEntryViewSet.as_view({'delete': 'delete_entry'}), name='delete_diary'),  # 일기 삭제
-    path('consulting/', CounselingRequestViewSet.as_view({'post': 'create'}), name='consulting'),  # 상담 작성하기 URL 경로
+    path('/consulting/application/', CounselingRequestViewSet.as_view({'post': 'create'}), name='consulting'),  # 상담 작성하기 URL 경로
     path('mypage/', MyPageView.as_view(), name='mypage'),  # 마이페이지 URL
     path('mypage/survey/', update_survey, name='update_survey'),  # 설문조사 업데이트 URL 경로
 ]
