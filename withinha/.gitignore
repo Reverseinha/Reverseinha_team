@@ -4,3 +4,5 @@ migrations
 __pycache__
 static
 virtual.DS_Store
+my_project.dot
+my_project.png

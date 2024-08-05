@@ -32,5 +32,6 @@ urlpatterns = [
     path('consulting/application/', CounselingRequestViewSet.as_view({'post': 'create'}), name='consulting'),  # 상담 작성하기 URL 경로
     path('mypage/', MyPageView.as_view(), name='mypage'),  # 마이페이지 URL
     path('mypage/survey/', update_survey, name='update_survey'),  # 설문조사 업데이트 URL 경로
-    path('score/',get_survey, name='get_survey') # 설문조사 점수가져오기
+    path('score/',get_survey, name='get_survey'), # 설문조사 점수가져오기
+    path('calendar/goal/all/', GoalallViewSet.as_view({'get': 'list'}), name='goal_all_list'),  # 목표 전체조회
 ]

@@ -491,4 +491,14 @@ def get_survey(self, request):
 
         return Response(data, status=status.HTTP_200_OK)
 
+class GoalallViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
 
+    def list(self, request):
+        user = request.user
+        goals = Goal.objects.filter(user=user)
+        goals_serializer = GoalSerializer(goals, many=True)
+
+        return Response({
+            'goals': goals_serializer.data
+        })  
