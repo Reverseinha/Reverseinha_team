@@ -21,13 +21,14 @@ urlpatterns = [
     path('community/<int:post_pk>/toggle_like/', toggle_like, name='toggle_like'),  # 좋아요 토글
 
     # 날짜별 목표 및 일기 처리
+
     path('calendar/goal_diary/', GoalDiaryViewSet.as_view({'get': 'list'}), name='goal_diary_list'),  # 목표 및 일기 조회
     path('calendar/goal/create/', GoalViewSet.as_view({'post': 'create'}), name='create_goal'),  # 목표 생성
     path('calendar/goal/<int:pk>/completed/', GoalViewSet.as_view({'patch': 'mark_completed'}), name='mark_goal_completed'),  # 목표 완료 상태 업데이트
     path('calendar/diary/create/', DiaryEntryViewSet.as_view({'post': 'create'}), name='create_diary'),  # 일기 생성
     path('calendar/diary/update/', DiaryEntryViewSet.as_view({'post': 'update_entry'}), name='update_diary'),  # 일기 수정
     path('calendar/diary/delete/', DiaryEntryViewSet.as_view({'delete': 'delete_entry'}), name='delete_diary'),  # 일기 삭제
-    path('/consulting/application/', CounselingRequestViewSet.as_view({'post': 'create'}), name='consulting'),  # 상담 작성하기 URL 경로
+    path('consulting/application/', CounselingRequestViewSet.as_view({'post': 'create'}), name='consulting'),  # 상담 작성하기 URL 경로
     path('mypage/', MyPageView.as_view(), name='mypage'),  # 마이페이지 URL
     path('mypage/survey/', update_survey, name='update_survey'),  # 설문조사 업데이트 URL 경로
 ]
