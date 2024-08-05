@@ -76,3 +76,6 @@
 |---------------------|--------|--------------------|
 | 마이페이지           | get    | /with/mypage/      |
 | 설문조사 재검사     | post   | /with/mypage/survey/ |
+
+![image](https://github.com/user-attachments/assets/34ddc047-795e-4e05-ad0a-982ceda63f5c)
+
