@@ -25,7 +25,7 @@
 * [Notion 링크]([https://www.notion.so/5c39c682496f45569c76f5d9950a82c8](https://dandelion-sodium-c38.notion.site/5cbe671b4dc648dc96e642ac4e8b6bbb?pvs=4])
 
 ## 📌 주요 기능
-* 노션링크참조
+노션링크참조
 * [Notion 링크]([https://www.notion.so/5c39c682496f45569c76f5d9950a82c8](https://dandelion-sodium-c38.notion.site/5cbe671b4dc648dc96e642ac4e8b6bbb?pvs=4])
   
 ## ✒️ API
