@@ -315,6 +315,14 @@ class GoalViewSet(viewsets.ModelViewSet):
                 return Response({"detail": "is_completed field is required."}, status=status.HTTP_400_BAD_REQUEST)
         except Goal.DoesNotExist:
             return Response({"detail": "Goal not found."}, status=status.HTTP_404_NOT_FOUND)
+    @action(detail=True, methods=['delete'], url_path='delete')
+    def delete_goal(self, request, pk=None):
+        try:
+            goal = self.get_object()
+            goal.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Goal.DoesNotExist:
+            return Response({"detail": "Goal not found."}, status=status.HTTP_404_NOT_FOUND)
     
 class DiaryEntryViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -483,11 +491,4 @@ def get_survey(self, request):
 
         return Response(data, status=status.HTTP_200_OK)
 
-@action(detail=True, methods=['delete'], url_path='delete')
-def delete_goal(self, request, pk=None):
-        try:
-            goal = self.get_object()
-            goal.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except Goal.DoesNotExist:
-            return Response({"detail": "Goal not found."}, status=status.HTTP_404_NOT_FOUND)
+
