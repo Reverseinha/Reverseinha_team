@@ -24,6 +24,7 @@ urlpatterns = [
 
     path('calendar/goal_diary/', GoalDiaryViewSet.as_view({'get': 'list'}), name='goal_diary_list'),  # 목표 및 일기 조회
     path('calendar/goal/create/', GoalViewSet.as_view({'post': 'create'}), name='create_goal'),  # 목표 생성
+    path('calendar/goal/<int:pk>/delete/', GoalViewSet.as_view({'delete': 'delete_goal'}), name='goal-delete'), # 목표 삭제
     path('calendar/goal/<int:pk>/completed/', GoalViewSet.as_view({'patch': 'mark_completed'}), name='mark_goal_completed'),  # 목표 완료 상태 업데이트
     path('calendar/diary/create/', DiaryEntryViewSet.as_view({'post': 'create'}), name='create_diary'),  # 일기 생성
     path('calendar/diary/update/', DiaryEntryViewSet.as_view({'post': 'update_entry'}), name='update_diary'),  # 일기 수정
@@ -31,4 +32,5 @@ urlpatterns = [
     path('consulting/application/', CounselingRequestViewSet.as_view({'post': 'create'}), name='consulting'),  # 상담 작성하기 URL 경로
     path('mypage/', MyPageView.as_view(), name='mypage'),  # 마이페이지 URL
     path('mypage/survey/', update_survey, name='update_survey'),  # 설문조사 업데이트 URL 경로
+    path('score/',get_survey, name='get_survey') # 설문조사 점수가져오기
 ]
