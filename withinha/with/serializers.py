@@ -71,7 +71,7 @@ class DaySerializer(serializers.ModelSerializer):
 class GoalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Goal
-        fields = ['text', 'is_completed']  # 'day'와 'user' 필드를 추가
+        fields = ['id','text', 'is_completed']  # 'day'와 'user' 필드를 추가
 
 class DiaryEntrySerializer(serializers.ModelSerializer):
     class Meta:
