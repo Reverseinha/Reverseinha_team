@@ -3,8 +3,11 @@
 멋쟁이사자처럼 대학 12th HACKATHON에서 사용한 서버코드입니다. Django를 사용하여 구현하였습니다.
 
 
+
 ## 👨‍🏫 프로젝트 소개
 **WITH**는 고립된 청년 및 자립준비 청년을 위한 종합 건강 지원 플랫폼 서비스로,  청년들이 직면한 정신적, 신체적 건강 문제 및 청년들의 맞춤형 건강 지원을 제공할 수 있게 도와주는 서비스입니다.
+
+
 
 ## ⏲️ 개발 기간
 * 2024.07.14(일) ~ 2024.08.06(화)
@@ -13,9 +16,11 @@
     * 프론트와 협업
 
 
+
 ## 🧑‍🤝‍🧑 개발자 소개
 * 염종섭
 * 최우진
+
 
 
 ## ⚙️ 기술 스택
@@ -24,9 +29,13 @@
 * 아이디어 회의: Notion
 * [Notion 링크]([https://www.notion.so/5c39c682496f45569c76f5d9950a82c8](https://dandelion-sodium-c38.notion.site/5cbe671b4dc648dc96e642ac4e8b6bbb?pvs=4])
 
+
+
 ## 📌 주요 기능
 노션링크참조
 * [Notion 링크]([https://www.notion.so/5c39c682496f45569c76f5d9950a82c8](https://dandelion-sodium-c38.notion.site/5cbe671b4dc648dc96e642ac4e8b6bbb?pvs=4])
+
+
   
 ## ✒️ API
 ### 사용자 인증관리
@@ -76,6 +85,8 @@
 |---------------------|--------|--------------------|
 | 마이페이지           | get    | /with/mypage/      |
 | 설문조사 재검사     | post   | /with/mypage/survey/ |
+
+
 
 ## 데이터베이스 관계도
 ![image](https://github.com/user-attachments/assets/34ddc047-795e-4e05-ad0a-982ceda63f5c)
